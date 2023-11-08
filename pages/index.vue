@@ -1,9 +1,11 @@
 <template>
-  <div class="bg-red-400">
-    Test
-  </div>
+  <MainLayout>
+    <div class="">
+      Test
+    </div>
+  </MainLayout>
 </template>
 
 <script setup>
-
+  import MainLayout from '~/layouts/MainLayout.vue';
 </script>
