@@ -21,7 +21,7 @@
 
     <img class="rounded-md md:w-[150px] w-[90px]" :src="product.url" />
 
-    <!-- <div class="overflow-hidden pl-2 w-full">
+    <div class="overflow-hidden pl-2 w-full">
       <div class="flex items-center justify-between w-full">
         <div class="flex items-center justify-between truncate">
           <span
@@ -56,13 +56,32 @@
           <Icon name="material-symbols:delete-outline" size="20" />
         </button>
       </div>
-    </div> -->
+    </div>
   </div>
 </template>
 
 <script setup>
+import { useUserStore } from '#imports';
+const props = defineProps(['product', 'selectedArray'])
+const { product, selectedArray } = toRefs(props)
+const { cart } = useUserStore()
+
+const emit = defineEmits(['selectedRadio'])
+
 let isHover = ref(false)
 let isSelected = ref(false)
+
+const removeFromCart = () => {
+  cart.forEach((item, index) => {
+    if (item.id === product.value.id) {
+      cart.splice(index, 1)
+    }
+  })
+}
+
+watch(() => isSelected.value, (val) => {
+  emit('selectedRadio', { id: product.value.id, val: val })
+})
 
 </script>
 
