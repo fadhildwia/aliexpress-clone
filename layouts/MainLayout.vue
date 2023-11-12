@@ -112,17 +112,21 @@
               </button>
             </div>
 
-            <div v-if="searchItem" class="absolute bg-white max-w-[700px] h-auto w-full">
-              <div class="p-1">
+            <div class="absolute bg-white max-w-[700px] h-auto w-full">
+              <div
+                v-if="items && items.data"
+                v-for="item in items.data"
+                class="p-1"
+              >
                 <NuxtLink
-                  to="`/item/1`"
+                  :to="`/item/${item.id}`"
                   class="flex items-center justify-between w-full cursor-pointer hover:bg-gray-100"
                 >
                   <div class="flex items-center">
-                    <img class="rounded-md" width="40" src="https://picsum.photos/id/70/300/300" />
-                    <div class="truncate ml-2">Test Item</div>
+                    <img class="rounded-md" width="40" :src="item.url" />
+                    <div class="truncate ml-2">{{ item.title }}</div>
                   </div>
-                  <div class="truncate">$ 98.99</div>
+                  <div class="truncate">${{ item.price / 100 }}</div>
                 </NuxtLink>
               </div>
             </div>
@@ -138,7 +142,7 @@
             <span
               class="absolute flex items-center justify-center -right-[3px] top-0 bg-[#FF4646] h-[17px] min-w-[17px] text-xs text-white px-0.5 rounded-full"
             >
-              0
+              {{ userStore.cart.length }}
             </span>
             <div class="min-w-[40px]">
               <Icon
@@ -160,20 +164,20 @@
     </div>
   </div>
 
-  <Loading v-if="isLoading" />
+  <Loading v-if="userStore.isLoading" />
 
   <div class="lg:pt-[150px] md:pt-[130px] pt-[80px]" />
   <slot />
 
-  <Footer v-if="!isLoading"/>
+  <Footer v-if="!userStore.isLoading" />
 </template>
 
 <script setup>
-  import { useUserStore } from '~/stores/user'
-  const { isLoading } = useUserStore()
+import { useUserStore } from "#imports";
+const userStore = useUserStore();
 
-  let isAccountMenu = ref(false);
-  let isCartHover = ref(false);
-  let isSearching = ref(false);
-  let searchItem = ref("");
+let isAccountMenu = ref(false);
+let isCartHover = ref(false);
+let isSearching = ref(false);
+let searchItem = ref("");
 </script>
