@@ -60,65 +60,111 @@
 
 <script setup>
 import MainLayout from "~/layouts/MainLayout.vue";
-import { useUserStore } from '#imports';
+import { useUserStore } from "#imports";
 
-const userStore = useUserStore()
+const userStore = useUserStore();
+const user = useSupabaseUser();
 
-let contactName = ref(null)
-let address = ref(null)
-let zipCode = ref(null)
-let city = ref(null)
-let country = ref(null)
+let contactName = ref(null);
+let address = ref(null);
+let zipCode = ref(null);
+let city = ref(null);
+let country = ref(null);
 
-let currentAddress = ref(null)
-let isUpdate = ref(false)
-let isWorking = ref(false)
-let error = ref(null)
+let currentAddress = ref(null);
+let isUpdate = ref(false);
+let isWorking = ref(false);
+let error = ref(null);
 
 watchEffect(async () => {
-  userStore.isLoading = false
-})
+  currentAddress.value = await useFetch(`/api/prisma/address/${user.value.id}`);
+
+  if (currentAddress.value.data) {
+    contactName.value = currentAddress.value.data.name;
+    address.value = currentAddress.value.data.address;
+    zipCode.value = currentAddress.value.data.zipcode;
+    city.value = currentAddress.value.data.city;
+    country.value = currentAddress.value.data.country;
+
+    isUpdate.value = true;
+  }
+
+  userStore.isLoading = false;
+});
 
 const submit = async () => {
-    isWorking.value = true
-    error.value = null
+  isWorking.value = true;
+  error.value = null;
 
-    if (!contactName.value) {
-        error.value = {
-            type: 'contactName',
-            message: 'A contact name is required'
-        }
-    } else if (!address.value) {
-        error.value = {
-            type: 'address',
-            message: 'An address is required'
-        }
-    } else if (!zipCode.value) {
-        error.value = {
-            type: 'zipCode',
-            message: 'A zip code is required'
-        }
-    } else if (!city.value) {
-        error.value = {
-            type: 'city',
-            message: 'A city is required'
-        }
-    } else if (!country.value) {
-        error.value = {
-            type: 'country',
-            message: 'A country is required'
-        }
+  if (!contactName.value) {
+    error.value = {
+      type: "contactName",
+      message: "A contact name is required",
+    };
+  } else if (!address.value) {
+    error.value = {
+      type: "address",
+      message: "An address is required",
+    };
+  } else if (!zipCode.value) {
+    error.value = {
+      type: "zipCode",
+      message: "A zip code is required",
+    };
+  } else if (!city.value) {
+    error.value = {
+      type: "city",
+      message: "A city is required",
+    };
+  } else if (!country.value) {
+    error.value = {
+      type: "country",
+      message: "A country is required",
+    };
+  }
+
+  if (error.value) {
+    isWorking.value = false;
+    return;
+  }
+
+  if (isUpdate.value) {
+    await useFetch(
+      `/api/prisma/address/update/${currentAddress.value.data.id}`,
+      {
+        method: "PATCH",
+        body: {
+          userId: user.value.id,
+          name: contactName.value,
+          address: address.value,
+          zipCode: zipCode.value,
+          city: city.value,
+          country: country.value,
+        },
+      }
+    );
+
+    isWorking.value = false;
+
+    return navigateTo("/checkout");
+  }
+
+  await useFetch(`/api/prisma/address/add`, {
+    method: 'POST',
+    body: {
+      userId: user.value.id,
+      name: contactName.value,
+      address: address.value,
+      zipCode: zipCode.value,
+      city: city.value,
+      country: country.value,
     }
+  })
 
-    if (error.value) {
-        isWorking.value = false
-        return
-    }
+  isWorking.value = false;
 
-    isWorking.value = false
-
-    return navigateTo('/checkout')
-}
+  return navigateTo("/checkout");
+};
 </script>
 
 <style lang="scss" scoped></style>

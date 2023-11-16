@@ -113,21 +113,23 @@
             </div>
 
             <div class="absolute bg-white max-w-[700px] h-auto w-full">
-              <div
-                v-if="items && items.data"
-                v-for="item in items.data"
-                class="p-1"
-              >
-                <NuxtLink
-                  :to="`/item/${item.id}`"
-                  class="flex items-center justify-between w-full cursor-pointer hover:bg-gray-100"
+              <div v-if="items && items.data">
+                <div
+                  v-for="item in items.data"
+                  :key="item"
+                  class="p-1"
                 >
-                  <div class="flex items-center">
-                    <img class="rounded-md" width="40" :src="item.url" />
-                    <div class="truncate ml-2">{{ item.title }}</div>
-                  </div>
-                  <div class="truncate">${{ item.price / 100 }}</div>
-                </NuxtLink>
+                  <NuxtLink
+                    :to="`/item/${item.id}`"
+                    class="flex items-center justify-between w-full cursor-pointer hover:bg-gray-100"
+                  >
+                    <div class="flex items-center">
+                      <img class="rounded-md" width="40" :src="item.url" />
+                      <div class="truncate ml-2">{{ item.title }}</div>
+                    </div>
+                    <div class="truncate">${{ item.price / 100 }}</div>
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </div>
@@ -174,10 +176,30 @@
 
 <script setup>
 import { useUserStore } from "#imports";
+
 const userStore = useUserStore();
+const user = useSupabaseUser()
 
 let isAccountMenu = ref(false);
 let isCartHover = ref(false);
 let isSearching = ref(false);
 let searchItem = ref("");
+let items = ref(null)
+
+const searchByName = useDebounce(async () => {
+  isSearching.value = true
+  items.value = await useFetch(`/api/prisma/products?search=${searchItem.value}`)
+  isSearching.value = false
+}, 100)
+
+watch(() => searchItem.value, async () => {
+  if (!searchItem.value) { 
+    setTimeout(() => {
+      items.value = ''
+      isSearching.value = false
+      return
+    }, 500)
+  }
+  searchByName() 
+})
 </script>

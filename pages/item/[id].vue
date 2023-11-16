@@ -26,9 +26,9 @@
         </div>
         <div class="md:w-[60%] bg-white p-3 rounded-lg">
           <div>
-            <p class="mb-2">Title</p>
+            <p class="mb-2">{{ product.title }}</p>
             <p class="font-light text-[12px] mb-2">
-              This is a description
+              {{ product.description }}
             </p>
           </div>
 
@@ -90,29 +90,10 @@
 import MainLayout from "~/layouts/MainLayout.vue";
 import { useUserStore } from "#imports";
 
-const { cart } = useUserStore()
+const userStore = useUserStore()
 const route = useRoute()
 
 let currentImage = ref(null)
-
-onMounted(() => {
-  currentImage.value = 'https://picsum.photos/id/211/800/800'
-  images.value[0] = 'https://picsum.photos/id/211/800/800'
-})
-
-const priceComputed = computed(() => {
-  return '20.00'
-})
-
-const isInCart = computed(() => {
-  let res = false
-  cart.forEach(item => {
-    if (route.params.id === item.id) {
-      res = true
-    }
-  })
-  return res
-})
 
 const images = ref([
   '',
@@ -123,8 +104,35 @@ const images = ref([
   'https://picsum.photos/id/144/800/800',
 ])
 
+const { data: product } = await useFetch(`/api/prisma/products/${route.params.id}`)
+
+watchEffect(() => {
+  if (product.value && product.value.url) {
+    currentImage.value = product.value.url
+    images.value[0] = product.value.url
+    userStore.isLoading = false
+  }
+})
+
+const priceComputed = computed(() => {
+  if (product.value && product.value.price) {
+    return product.value.price / 100
+  }
+  return '0.00'
+})
+
+const isInCart = computed(() => {
+  let res = false
+  userStore.cart.forEach(item => {
+    if (route.params.id === item.id) {
+      res = true
+    }
+  })
+  return res
+})
+
 const addToCart = () => {
-  alert('ADDED')
+  userStore.cart.push(product.value)
 }
 </script>
 

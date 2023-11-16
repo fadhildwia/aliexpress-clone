@@ -1,13 +1,13 @@
 <template>
   <MainLayout>
     <div id="ShoppingCartPage" class="mt-4 max-w-[1200px] mx-auto px-2">
-      <div v-if="userStore.cart.length" class="h-[500px] flex items-center justify-center">
+      <div v-if="!userStore.cart.length" class="h-[500px] flex items-center justify-center">
         <div class="pt-20">
           <img class="mx-auto" width="250" src="/cart-empty.png" />
 
           <div class="text-xl text-center mt-4">No items yet?</div>
 
-          <div v-if="true" class="flex text-center">
+          <div v-if="!user" class="flex text-center">
             <NuxtLink to="/auth" class="bg-[#FD374F] w-full text-white text-[21px] font-semibold p-1.5 rounded-full mt-4">
               Sign in
             </NuxtLink>
@@ -30,7 +30,7 @@
           </div>
 
           <div id="Items" class="bg-white rounded-lg p-4 mt-4">
-            <div v-for="product in products" :key="product">
+            <div v-for="product in userStore.cart" :key="product">
               <CartItem :product="product" :selectedArray="selectedArray" @selectedRadio="selectedRadioFunc" />
             </div>
           </div>
@@ -43,7 +43,7 @@
             <div class="flex items-center justify-between my-4">
               <div class="font-semibold">Total</div>
               <div class="text-2xl font-semibold">
-                $ <span class="font-extrabold">0</span>
+                $ <span class="font-extrabold">{{ totalPriceComputed }}</span>
               </div>
             </div>
             <button @click="goToCheckout"
@@ -55,7 +55,7 @@
           <div id="PaymentProtection" class="bg-white rounded-lg p-4 mt-4">
             <div class="text-lg font-semibold mb-2">Payment methods</div>
             <div class="flex items-center justify-start gap-8 my-4">
-              <div v-for="card in cards">
+              <div v-for="card in cards" :key="card">
                 <img class="h-6" :src="card" />
               </div>
             </div>
@@ -79,6 +79,7 @@ import MainLayout from '~/layouts/MainLayout.vue';
 import { useUserStore } from '#imports';
 
 const userStore = useUserStore()
+const user = useSupabaseUser()
 
 let selectedArray = ref([])
 
@@ -89,13 +90,16 @@ const cards = ref([
   'applepay.png',
 ])
 
-const products = [
-  { id: 1, title: "Product 1", description: 'This is a description', url: "https://picsum.photos/id/70/300/300", price: 999 },
-  { id: 2, title: "Product 2", description: 'This is a description', url: "https://picsum.photos/id/71/300/300", price: 999 },
-]
-
 onMounted(() => {
   setTimeout(() => userStore.isLoading = false, 200)
+})
+
+const totalPriceComputed = computed(() => {
+  let price = 0
+  userStore.cart.forEach(prod => {
+    price += prod.price
+  })
+  return price / 100
 })
 
 const selectedRadioFunc = (e) => {
@@ -120,7 +124,7 @@ const goToCheckout = () => {
   selectedArray.value.forEach(item => ids.push(item.id))
 
   let res = userStore.cart.filter((item) => {
-    return ids.indexOf(item.id) != -1
+      return ids.indexOf(item.id) != -1
   })
 
   res.forEach(item => userStore.checkout.push(toRaw(item)))

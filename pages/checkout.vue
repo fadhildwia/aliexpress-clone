@@ -6,7 +6,7 @@
           <div class="bg-white rounded-lg p-4">
             <div class="text-xl font-semibold mb-2">Shipping Address</div>
 
-            <div v-if="true">
+            <div v-if="currentAddress && currentAddress.data">
               <NuxtLink
                 to="/address"
                 class="flex items-center pb-2 text-blue-500 hover:text-red-400"
@@ -20,28 +20,28 @@
                 <ul class="text-xs">
                   <li class="flex items-center gap-2">
                     <div>Contact name:</div>
-                    <div class="font-bold">Test</div>
+                    <div class="font-bold">{{ currentAddress.data.name }}</div>
                   </li>
                   <li class="flex items-center gap-2">
                     <div>Address:</div>
                     <div class="font-bold">
-                      Test
+                      {{ currentAddress.data.address }}
                     </div>
                   </li>
                   <li class="flex items-center gap-2">
                     <div>Zip Code:</div>
                     <div class="font-bold">
-                      Test
+                      {{ currentAddress.data.zipcode }}
                     </div>
                   </li>
                   <li class="flex items-center gap-2">
                     <div>City:</div>
-                    <div class="font-bold">Test</div>
+                    <div class="font-bold">{{ currentAddress.data.city }}</div>
                   </li>
                   <li class="flex items-center gap-2">
                     <div>Country:</div>
                     <div class="font-bold">
-                      Test
+                      {{ currentAddress.data.country }}
                     </div>
                   </li>
                 </ul>
@@ -59,7 +59,7 @@
           </div>
 
           <div id="Items" class="bg-white rounded-lg p-4 mt-4">
-            <div v-for="product in products">
+            <div v-for="product in userStore.checkout" :key="product">
               <CheckoutItem :product="product" />
             </div>
           </div>
@@ -125,7 +125,10 @@ import MainLayout from "~/layouts/MainLayout.vue";
 import { useUserStore } from "#imports";
 
 const userStore = useUserStore();
+const user = useSupabaseUser()
 const route = useRoute()
+
+definePageMeta({ middleware: "auth" })
 
 let stripe = null
 let elements = null
@@ -136,10 +139,23 @@ let clientSecret = null
 let currentAddress = ref(null)
 let isProcessing = ref(false)
 
-const products = [
-  { id: 1, title: "Product 1", description: 'This is a description', url: "https://picsum.photos/id/70/300/300", price: 999 },
-  { id: 2, title: "Product 2", description: 'This is a description', url: "https://picsum.photos/id/71/300/300", price: 999 },
-]
+onBeforeMount(async () => {
+  if (userStore.checkout.length < 1) {
+    return navigateTo('/shoppingcart')
+  }
+
+  total.value = 0.00
+  if (user.value) {
+    currentAddress.value = await useFetch(`/api/prisma/address/${user.value.id}`)
+    setTimeout(() => userStore.isLoading = false, 200)
+  }
+})
+
+watchEffect(() => {
+  if (route.fullPath == '/checkout' && !user.value) {
+    return navigateTo('/auth')
+  }
+})
 
 onMounted(async () => {
     isProcessing.value = true
