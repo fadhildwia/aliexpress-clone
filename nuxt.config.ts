@@ -32,6 +32,10 @@ export default defineNuxtConfig({
     }
   },
   nitro: {
+    preset: 'node-server',
+    storage: {
+      data: { driver: 'vercelKV' }
+    },
     vercel: {
       config: { 
         bypassToken: process.env.VERCEL_BYPASS_TOKEN
