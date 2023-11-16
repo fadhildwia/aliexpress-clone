@@ -29,7 +29,6 @@
     "nuxt-lodash": "^2.5.3",
     "pinia": "^2.1.7",
     "prisma": "^5.5.2",
-    "stripe": "^14.3.0",
-    "@vercel/kv": "latest"
+    "stripe": "^14.3.0"
   }
 }
